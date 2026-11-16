@@ -1,36 +1,124 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
+    <title>Crear cuenta en el Infierno</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Pirata+One&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css"
 <body>
-    <header>
-        <nav>
 
-        </nav>
-    </header>
-    <main>
-        <form action="">
-            <label for="name" id="name">Nombre</label>
-            <input type="text" id="name">
-        
-            <label for="email">Correo</label>
-            <input type="email" id="email">
+    <!-- El muro: la inscripción que hay sobre la puerta del infierno -->
+    <blockquote class="inscripcion">
+        <p>Abandonad<br>toda esperanza<br>los que entráis.</p>
+        <footer>Dante, <cite>Infierno</cite>, canto III</footer>
+    </blockquote>
 
-            <label for="passIni" id="passIni">Contraseña</label>
-            <input type="password" name="passIni" id="passIni">
+    <!-- La puerta: dentro va el formulario -->
+    <main class="puerta">
+        <h1>Crear cuenta</h1>
 
-            <label for="passCopy" id="passCopy">Repetir contraseña</label>
-            <input type="password" name="passCopy" id="passCopy">
+        <form id="registro" action="#" method="post" novalidate>
 
-            <button type="submit" id="submitButton">Continuar</button>
+            <div class="campo">
+                <label for="nombre">Nombre</label>
+                <input type="text" id="nombre" name="nombre" autocomplete="name"
+                       required data-vacio="Escribe tu nombre" aria-describedby="error-nombre">
+                <p class="error" id="error-nombre"></p>
+            </div>
+
+            <div class="campo">
+                <label for="email">Correo</label>
+                <input type="email" id="email" name="email" autocomplete="email"
+                       required data-vacio="Escribe tu correo" aria-describedby="error-email">
+                <p class="error" id="error-email"></p>
+            </div>
+
+            <div class="campo">
+                <label for="password">Contraseña <span class="pista">mínimo 8 caracteres</span></label>
+                <div class="con-boton">
+                    <input type="password" id="password" name="password" autocomplete="new-password"
+                           minlength="8" required data-vacio="Escribe una contraseña" aria-describedby="error-password">
+                    <button type="button" class="ver" data-campo="password">Ver</button>
+                </div>
+                <p class="error" id="error-password"></p>
+            </div>
+
+            <div class="campo">
+                <label for="confirmar">Confirmar contraseña</label>
+                <div class="con-boton">
+                    <input type="password" id="confirmar" name="confirmar" autocomplete="new-password"
+                           required data-vacio="Repite la contraseña" aria-describedby="error-confirmar">
+                    <button type="button" class="ver" data-campo="confirmar">Ver</button>
+                </div>
+                <p class="error" id="error-confirmar"></p>
+            </div>
+
+            <button type="submit" class="boton">Entrar</button>
         </form>
 
+        <p class="cambio">¿Ya tienes cuenta? <a href="login.html">Inicia sesión</a></p>
     </main>
-    <footer>
 
-    </footer>
+    <script>
+        const form = document.getElementById('registro');
+        const pass = document.getElementById('password');
+        const confirmar = document.getElementById('confirmar');
+        const campos = [...form.querySelectorAll('input')];
+
+        // Botones "Ver" / "Ocultar" de las contraseñas
+        document.querySelectorAll('.ver').forEach(boton => {
+            boton.addEventListener('click', () => {
+                const input = document.getElementById(boton.dataset.campo);
+                const oculta = input.type === 'password';
+                input.type = oculta ? 'text' : 'password';
+                boton.textContent = oculta ? 'Ocultar' : 'Ver';
+            });
+        });
+
+        // Comprueba un campo y escribe el error debajo. Devuelve true si está bien.
+        function validar(input) {
+            if (input === confirmar) {
+                const distintas = confirmar.value !== '' && confirmar.value !== pass.value;
+                confirmar.setCustomValidity(distintas ? 'Las contraseñas no coinciden' : '');
+            }
+
+            let mensaje = '';
+            if (input.validity.valueMissing)      mensaje = input.dataset.vacio;
+            else if (input.validity.typeMismatch) mensaje = 'Escribe un correo como nombre@dominio.com';
+            else if (input.validity.tooShort)     mensaje = 'La contraseña necesita al menos 8 caracteres';
+            else if (input.validity.customError)  mensaje = input.validationMessage;
+
+            input.closest('.campo').querySelector('.error').textContent = mensaje;
+            input.classList.toggle('mal', mensaje !== '');
+            return mensaje === '';
+        }
+
+        // Valida cada campo al salir de él
+        campos.forEach(input => input.addEventListener('blur', () => validar(input)));
+
+        // Si cambia la contraseña, vuelve a comparar la confirmación
+        pass.addEventListener('input', () => {
+            if (confirmar.value !== '') validar(confirmar);
+        });
+
+        form.addEventListener('submit', evento => {
+            evento.preventDefault();
+
+            const resultados = campos.map(validar);
+            if (resultados.includes(false)) {
+                // Lleva el cursor al primer campo con error
+                campos[resultados.indexOf(false)].focus();
+                return;
+            }
+
+            // Todo correcto: el muro se apaga y después se envía el formulario
+            document.body.classList.add('dentro');
+            setTimeout(() => form.submit(), 900);
+        });
+    </script>
+
 </body>
 </html>
