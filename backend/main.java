@@ -21,6 +21,7 @@ public class main {
         );
 
         servidor.createContext("/api/registro", main::registrar);
+        servidor.createContext("/api/login", main::login);
 
         servidor.setExecutor(null);
         servidor.start();
@@ -109,6 +110,78 @@ public class main {
             responder(exchange, 500, "Error interno del servidor");
         }
     }
+
+
+private static void login(HttpExchange exchange) throws IOException {
+
+    // Configuración CORS
+    exchange.getResponseHeaders().set(
+        "Access-Control-Allow-Origin", "*"
+    );
+
+    exchange.getResponseHeaders().set(
+        "Access-Control-Allow-Methods", "POST, OPTIONS"
+    );
+
+    exchange.getResponseHeaders().set(
+        "Access-Control-Allow-Headers", "Content-Type"
+    );
+
+    if (exchange.getRequestMethod().equals("OPTIONS")) {
+        exchange.sendResponseHeaders(204, -1);
+        return;
+    }
+
+    if (!exchange.getRequestMethod().equals("POST")) {
+        responder(exchange, 405, "Método no permitido");
+        return;
+    }
+
+    try {
+
+        // Recibimos los datos del frontend
+        String cuerpo = new String(
+            exchange.getRequestBody().readAllBytes(),
+            StandardCharsets.UTF_8
+        );
+
+        Map<String, String> datos = obtenerDatos(cuerpo);
+
+        String email = datos.get("email");
+        String password = datos.get("password");
+
+        // Comprobamos que los campos estén completos
+        if (email == null || password == null ||
+            email.isBlank() || password.isBlank()) {
+
+            responder(exchange, 400, "Introduce correo y contraseña");
+            return;
+        }
+
+        // Buscamos al usuario
+        Usuario usuario = gestor.buscarUsuario(email);
+
+        if (usuario == null) {
+            responder(exchange, 401, "Correo o contraseña incorrectos");
+            return;
+        }
+
+        // Comprobamos la contraseña
+        boolean correcto = gestor.comprobarPassword(password, usuario);
+
+        if (!correcto) {
+            responder(exchange, 401, "Correo o contraseña incorrectos");
+            return;
+        }
+
+        responder(exchange, 200, "Inicio de sesión correcto");
+
+    } catch (Exception e) {
+
+        e.printStackTrace();
+        responder(exchange, 500, "Error interno del servidor");
+    }
+}
 
     // Convierte los parámetros recibidos en un Map
     private static Map<String, String> obtenerDatos(String cuerpo) {
