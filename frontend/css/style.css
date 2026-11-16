@@ -1,0 +1,77 @@
+body{
+    margin: 0;
+    font-family: 'Outfit', sans-serif;
+    color: #bca70b;
+    background-color: #ded310;
+}
+
+main{
+    margin: 10% auto;
+    width: 25%;
+    border-radius: 0.8rem;
+    border: 0.2px #bca70b solid;
+    background-color: white;
+}
+
+h1{
+
+    margin: 1rem;
+}
+
+form{
+    margin: 0 auto;
+    margin-bottom: 1rem;
+    width: 20rem;
+    display: flex;
+    flex-direction: column;
+}
+
+input, button{
+    border-radius: 0.4rem;
+    border: 1px #ded310 solid;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+label, input, button{
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+
+input{
+    background-color: #dedede;
+    border: none;
+    padding: 0.4rem;
+    margin-bottom: 1rem;
+}
+
+button{
+    margin: 0 auto;
+    width: 50%;
+    margin-top: 1rem;
+    padding: 1rem;
+    border: none;
+    background-color: #bca70b;
+    color: #3c2d07;
+    transition: background-color 0.15s ease;
+}
+
+button:hover{
+    background-color: #f2ec36;
+}
+
+input[type="text"], input[type="email"], input[type="password"] {
+  color: #675215;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 500;
+  font-size: 16px;
+}
+
+a{
+    display: block;
+    width: fit-content;
+    margin: 0 auto 1rem;
+    color: #302f2f;
+    text-decoration: underline;
+    text-underline-offset: .2em;
+}
