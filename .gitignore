@@ -1,0 +1,34 @@
+
+# Datos de usuarios y credenciales
+usuarios.txt
+backend/usuarios.txt
+*.db
+*.sqlite
+*.sqlite3
+
+# Variables y configuración sensible
+.env
+.env.*
+!.env.example
+secrets/
+*.key
+*.pem
+
+# Java compilado
+*.class
+
+# Logs
+*.log
+
+# Archivos temporales
+*.tmp
+*.bak
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Sistema operativo
+.DS_Store
+Thumbs.db

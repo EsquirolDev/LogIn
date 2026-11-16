@@ -1,3 +1,6 @@
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.net.URLConnection;
 import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.HttpExchange;
 
@@ -9,10 +12,79 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
-//Hola
 public class main {
 
     private static final GestorUsuarios gestor = new GestorUsuarios();
+
+    private static void servirFrontend(HttpExchange exchange)
+            throws IOException {
+
+        if (!exchange.getRequestMethod().equals("GET") &&
+                !exchange.getRequestMethod().equals("HEAD")) {
+
+            responder(exchange, 405, "Método no permitido");
+            return;
+        }
+
+        String ruta = exchange.getRequestURI().getPath();
+
+        if (ruta.equals("/")) {
+            ruta = "/login.html";
+        }
+
+        Path carpetaFrontend = Path.of("..", "frontend")
+                .toAbsolutePath().normalize();
+
+        Path archivo = carpetaFrontend.resolve(
+                ruta.substring(1)
+        ).normalize();
+
+        if (!archivo.startsWith(carpetaFrontend) ||
+                !Files.isRegularFile(archivo)) {
+
+            exchange.sendResponseHeaders(404, -1);
+            exchange.close();
+            return;
+        }
+
+        String tipo = URLConnection.guessContentTypeFromName(
+                archivo.toString()
+        );
+
+        if (tipo == null) {
+            tipo = "application/octet-stream";
+        }
+
+        if (archivo.toString().endsWith(".css")) {
+            tipo = "text/css; charset=UTF-8";
+        }
+
+        if (archivo.toString().endsWith(".html")) {
+            tipo = "text/html; charset=UTF-8";
+        }
+
+        byte[] contenido = Files.readAllBytes(archivo);
+
+        exchange.getResponseHeaders().set(
+                "Content-Type", tipo
+        );
+
+        exchange.getResponseHeaders().set(
+                "X-Content-Type-Options", "nosniff"
+        );
+
+        if (exchange.getRequestMethod().equals("HEAD")) {
+            exchange.sendResponseHeaders(200, -1);
+            exchange.close();
+            return;
+        }
+
+        exchange.sendResponseHeaders(200, contenido.length);
+
+        try (OutputStream salida = exchange.getResponseBody()) {
+            salida.write(contenido);
+        }
+    }
 
     public static void main(String[] args) throws IOException {
 
@@ -22,34 +94,42 @@ public class main {
 
         servidor.createContext("/api/registro", main::registrar);
         servidor.createContext("/api/login", main::login);
+        servidor.createContext("/", main::servirFrontend);
 
         servidor.setExecutor(null);
         servidor.start();
 
         System.out.println("Servidor iniciado en http://localhost:8080");
+        System.out.println("Registro: POST /api/registro");
+        System.out.println("Login: POST /api/login");
     }
 
-    // Gestiona el registro de usuarios
+    private static void redirigir(
+            HttpExchange exchange, String destino) throws IOException {
+
+        exchange.getResponseHeaders().set(
+                "Location", destino
+        );
+
+        exchange.sendResponseHeaders(303, -1);
+        exchange.close();
+    }
+
+    private static void configurar(HttpExchange exchange) {
+
+        exchange.getResponseHeaders().set(
+                "Content-Type", "application/json; charset=UTF-8"
+        );
+
+        exchange.getResponseHeaders().set(
+                "Cache-Control", "no-store"
+        );
+    }
+
     private static void registrar(HttpExchange exchange)
             throws IOException {
 
-        // Configuración CORS para el frontend
-        exchange.getResponseHeaders().set(
-                "Access-Control-Allow-Origin", "*"
-        );
-
-        exchange.getResponseHeaders().set(
-                "Access-Control-Allow-Methods", "POST, OPTIONS"
-        );
-
-        exchange.getResponseHeaders().set(
-                "Access-Control-Allow-Headers", "Content-Type"
-        );
-
-        if (exchange.getRequestMethod().equals("OPTIONS")) {
-            exchange.sendResponseHeaders(204, -1);
-            return;
-        }
+        configurar(exchange);
 
         if (!exchange.getRequestMethod().equals("POST")) {
             responder(exchange, 405, "Método no permitido");
@@ -58,12 +138,7 @@ public class main {
 
         try {
 
-            String cuerpo = new String(
-                    exchange.getRequestBody().readAllBytes(),
-                    StandardCharsets.UTF_8
-            );
-
-            Map<String, String> datos = obtenerDatos(cuerpo);
+            Map<String, String> datos = obtenerDatos(exchange);
 
             String nombre = datos.get("nombre");
             String email = datos.get("email");
@@ -72,9 +147,18 @@ public class main {
 
             if (nombre == null || email == null ||
                     password == null || confirmar == null ||
-                    nombre.isBlank() || email.isBlank()) {
+                    nombre.isBlank() || email.isBlank() ||
+                    password.isBlank() || confirmar.isBlank()) {
 
-                responder(exchange, 400, "Faltan campos obligatorios");
+                responder(exchange, 400, "Todos los campos son obligatorios");
+                return;
+            }
+
+            nombre = nombre.trim();
+            email = email.trim().toLowerCase();
+
+            if (nombre.length() > 100 || email.length() > 254) {
+                responder(exchange, 400, "Nombre o correo demasiado largos");
                 return;
             }
 
@@ -84,7 +168,8 @@ public class main {
             }
 
             if (password.length() < 8) {
-                responder(exchange, 400, "Contraseña demasiado corta");
+                responder(exchange, 400,
+                        "La contraseña debe tener al menos 8 caracteres");
                 return;
             }
 
@@ -102,7 +187,11 @@ public class main {
                 return;
             }
 
-            responder(exchange, 201, "Usuario registrado correctamente");
+            redirigir(exchange, "/registro-exitoso.html");
+
+        } catch (IllegalArgumentException e) {
+
+            responder(exchange, 400, "Datos del formulario no válidos");
 
         } catch (Exception e) {
 
@@ -111,84 +200,82 @@ public class main {
         }
     }
 
+    private static void login(HttpExchange exchange)
+            throws IOException {
 
-private static void login(HttpExchange exchange) throws IOException {
+        configurar(exchange);
 
-    // Configuración CORS
-    exchange.getResponseHeaders().set(
-        "Access-Control-Allow-Origin", "*"
-    );
+        if (!exchange.getRequestMethod().equals("POST")) {
+            responder(exchange, 405, "Método no permitido");
+            return;
+        }
 
-    exchange.getResponseHeaders().set(
-        "Access-Control-Allow-Methods", "POST, OPTIONS"
-    );
+        try {
 
-    exchange.getResponseHeaders().set(
-        "Access-Control-Allow-Headers", "Content-Type"
-    );
+            Map<String, String> datos = obtenerDatos(exchange);
 
-    if (exchange.getRequestMethod().equals("OPTIONS")) {
-        exchange.sendResponseHeaders(204, -1);
-        return;
+            String email = datos.get("email");
+            String password = datos.get("password");
+
+            if (email == null || password == null ||
+                    email.isBlank() || password.isBlank()) {
+
+                responder(exchange, 400,
+                        "Introduce correo y contraseña");
+                return;
+            }
+
+            email = email.trim().toLowerCase();
+
+            Usuario usuario = gestor.buscarUsuario(email);
+
+            if (usuario == null ||
+                    !gestor.comprobarPassword(password, usuario)) {
+
+                responder(exchange, 401,
+                        "Correo o contraseña incorrectos");
+                return;
+            }
+
+            responder(exchange, 200,
+                    "Inicio de sesión correcto");
+
+        } catch (IllegalArgumentException e) {
+
+            responder(exchange, 400, "Datos del formulario no válidos");
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+            responder(exchange, 500, "Error interno del servidor");
+        }
     }
 
-    if (!exchange.getRequestMethod().equals("POST")) {
-        responder(exchange, 405, "Método no permitido");
-        return;
-    }
+    private static Map<String, String> obtenerDatos(
+            HttpExchange exchange) throws IOException {
 
-    try {
+        String tipo = exchange.getRequestHeaders()
+                .getFirst("Content-Type");
 
-        // Recibimos los datos del frontend
-        String cuerpo = new String(
-            exchange.getRequestBody().readAllBytes(),
-            StandardCharsets.UTF_8
+        if (tipo == null ||
+                !tipo.toLowerCase().startsWith(
+                        "application/x-www-form-urlencoded")) {
+            throw new IllegalArgumentException("Formato no válido");
+        }
+
+        byte[] cuerpo = exchange.getRequestBody().readNBytes(16385);
+
+        if (cuerpo.length > 16384) {
+            throw new IllegalArgumentException("Petición demasiado grande");
+        }
+
+        String contenido = new String(
+                cuerpo, StandardCharsets.UTF_8
         );
-
-        Map<String, String> datos = obtenerDatos(cuerpo);
-
-        String email = datos.get("email");
-        String password = datos.get("password");
-
-        // Comprobamos que los campos estén completos
-        if (email == null || password == null ||
-            email.isBlank() || password.isBlank()) {
-
-            responder(exchange, 400, "Introduce correo y contraseña");
-            return;
-        }
-
-        // Buscamos al usuario
-        Usuario usuario = gestor.buscarUsuario(email);
-
-        if (usuario == null) {
-            responder(exchange, 401, "Correo o contraseña incorrectos");
-            return;
-        }
-
-        // Comprobamos la contraseña
-        boolean correcto = gestor.comprobarPassword(password, usuario);
-
-        if (!correcto) {
-            responder(exchange, 401, "Correo o contraseña incorrectos");
-            return;
-        }
-
-        responder(exchange, 200, "Inicio de sesión correcto");
-
-    } catch (Exception e) {
-
-        e.printStackTrace();
-        responder(exchange, 500, "Error interno del servidor");
-    }
-}
-
-    // Convierte los parámetros recibidos en un Map
-    private static Map<String, String> obtenerDatos(String cuerpo) {
 
         Map<String, String> datos = new HashMap<>();
 
-        for (String parametro : cuerpo.split("&")) {
+        for (String parametro : contenido.split("&")) {
 
             String[] partes = parametro.split("=", 2);
 
@@ -209,23 +296,28 @@ private static void login(HttpExchange exchange) throws IOException {
         return datos;
     }
 
-    // Envía una respuesta JSON
     private static void responder(
-            HttpExchange exchange, int codigo, String mensaje)
-            throws IOException {
+            HttpExchange exchange,
+            int codigo,
+            String mensaje) throws IOException {
 
-        String json = "{\"mensaje\":\"" + mensaje + "\"}";
+        String json = "{\"mensaje\":\"" + escaparJSON(mensaje) + "\"}";
 
         byte[] respuesta = json.getBytes(StandardCharsets.UTF_8);
-
-        exchange.getResponseHeaders().set(
-                "Content-Type", "application/json; charset=UTF-8"
-        );
 
         exchange.sendResponseHeaders(codigo, respuesta.length);
 
         try (OutputStream salida = exchange.getResponseBody()) {
             salida.write(respuesta);
         }
+    }
+
+    private static String escaparJSON(String texto) {
+
+        return texto.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t");
     }
 }

@@ -12,13 +12,13 @@ public class GestorUsuarios {
     private static final int ITERACIONES = 210000;
 
     // Comprueba si un correo ya está registrado
-    public boolean existeUsuario(String email) throws IOException {
+    public synchronized boolean existeUsuario(String email) throws IOException {
 
         return buscarUsuario(email) != null;
     }
 
     // Busca un usuario por su correo
-    public Usuario buscarUsuario(String email) throws IOException {
+    public synchronized Usuario buscarUsuario(String email) throws IOException {
 
         if (!Files.exists(Paths.get(ARCHIVO))) {
             return null;
@@ -44,9 +44,15 @@ public class GestorUsuarios {
     }
 
     // Registra un usuario nuevo
-    public boolean registrarUsuario(
-            String nombre, String email, String password)
-            throws Exception {
+    public synchronized boolean registrarUsuario(
+        String nombre, String email, String password)
+        throws Exception {
+
+        if (nombre.contains(";") ||
+                nombre.contains("\n") ||
+                nombre.contains("\r")) {
+            throw new IllegalArgumentException("Nombre no válido");
+        }
 
         if (existeUsuario(email)) {
             return false;
