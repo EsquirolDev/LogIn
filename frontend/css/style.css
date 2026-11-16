@@ -1,250 +1,77 @@
-*,
-*::before,
-*::after{
-    box-sizing: border-box;
-}
-
-:root{
-    --rojo: #c4161c;     /* el muro */
-    --negro: #000;       /* la puerta y la inscripción */
-    --hueso: #efe6d5;    /* el texto */
-    --ceniza: #91887c;   /* líneas y texto secundario */
-    --aviso: #ff8172;    /* errores */
-}
-
 body{
-    margin: 0 auto;
-    max-width: 84rem;
-    min-height: 100vh;
-    padding: 0 clamp(1.25rem, 5vw, 4.5rem);
-    font-family: 'EB Garamond', Georgia, serif;
-    font-size: 1.1875rem;
-    line-height: 1.4;
-    color: var(--hueso);
-    background: var(--rojo);
-    display: grid;
-    grid-template-columns: 1fr 26rem;   /* muro | puerta */
-    column-gap: 4rem;
-    transition: background-color .8s;
-}
-
-/* ---------- El muro ---------- */
-.inscripcion{
     margin: 0;
-    padding: 4rem 0;
-    align-self: center;
+    font-family: 'Outfit', sans-serif;
+    color: #bca70b;
+    background-color: #ded310;
 }
 
-.inscripcion p{
-    margin: 0;
-    font-family: 'Pirata One', 'EB Garamond', serif;
-    font-size: clamp(3.5rem, 7.6vw, 7.75rem);
-    line-height: .92;
-    color: var(--negro);
-}
-
-.inscripcion footer{
-    margin-top: 2rem;
-    font-style: italic;
-    transition: opacity .8s;
-}
-
-/* ---------- La puerta ---------- */
-.puerta{
-    align-self: end;                    /* apoyada en el suelo */
-    margin-top: 3rem;
-    min-height: 86vh;
-    padding: 6.5rem 2.75rem 2.5rem;
-    background: var(--negro);
-    border-radius: 999px 999px 0 0;     /* el arco */
+main{
+    margin: 10% auto;
+    width: 25%;
+    border-radius: 0.8rem;
+    border: 0.2px #bca70b solid;
+    background-color: white;
 }
 
 h1{
-    margin: 0 0 2.5rem;
-    font-family: 'Pirata One', 'EB Garamond', serif;
-    font-size: 2.75rem;
-    font-weight: 400;
-    line-height: 1;
-    text-align: center;
+
+    margin: 1rem;
 }
 
-/* ---------- Campos ---------- */
-.campo{
-    margin-bottom: .5rem;
+form{
+    margin: 0 auto;
+    margin-bottom: 1rem;
+    width: 20rem;
+    display: flex;
+    flex-direction: column;
 }
 
-label{
-    display: block;
-    font-size: 1.0625rem;
-    color: var(--ceniza);
-}
-
-.pista{
-    font-style: italic;
-}
-
-.pista::before{
-    content: "(";
-}
-
-.pista::after{
-    content: ")";
-}
-
-/* Sin caja: solo una línea para escribir encima, como en un libro de firmas */
-input{
+input, button{
+    border-radius: 0.4rem;
+    border: 1px #ded310 solid;
     width: 100%;
-    padding: .35rem 0 .5rem;
-    font: inherit;
-    font-size: 1.3125rem;
-    color: var(--hueso);
-    caret-color: var(--rojo);
-    background: none;
+    box-sizing: border-box;
+}
+
+label, input, button{
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+
+input{
+    background-color: #dedede;
     border: none;
-    border-bottom: 1px solid var(--ceniza);
-    border-radius: 0;
-    outline: none;
+    padding: 0.4rem;
+    margin-bottom: 1rem;
 }
 
-input:focus{
-    border-bottom-color: var(--hueso);
-    box-shadow: 0 1px 0 var(--hueso);   /* engorda la línea sin mover nada */
-}
-
-input.mal{
-    border-bottom-color: var(--aviso);
-    box-shadow: 0 1px 0 var(--aviso);
-}
-
-/* Chrome pinta de azul los campos autocompletados: esto lo evita */
-input:-webkit-autofill{
-    -webkit-text-fill-color: var(--hueso);
-    box-shadow: 0 0 0 100px var(--negro) inset, 0 1px 0 var(--ceniza);
-}
-
-.error{
-    margin: .3rem 0 0;
-    min-height: 1.4em;                  /* reserva el hueco para que no salte */
-    font-size: 1rem;
-    color: var(--aviso);
-}
-
-/* Contraseña con su botón "Ver" */
-.con-boton{
-    position: relative;
-}
-
-.con-boton input{
-    padding-right: 4.5rem;
-}
-
-.ver{
-    position: absolute;
-    right: 0;
-    bottom: .5rem;
-    padding: 0;
-    font: inherit;
-    font-size: 1rem;
-    color: var(--ceniza);
-    background: none;
+button{
+    margin: 0 auto;
+    width: 50%;
+    margin-top: 1rem;
+    padding: 1rem;
     border: none;
+    background-color: #bca70b;
+    color: #3c2d07;
+    transition: background-color 0.15s ease;
+}
+
+button:hover{
+    background-color: #f2ec36;
+}
+
+input[type="text"], input[type="email"], input[type="password"] {
+  color: #675215;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 500;
+  font-size: 16px;
+}
+
+a{
+    display: block;
+    width: fit-content;
+    margin: 0 auto 1rem;
+    color: #302f2f;
     text-decoration: underline;
     text-underline-offset: .2em;
-    cursor: pointer;
-}
-
-.ver:hover{
-    color: var(--hueso);
-}
-
-/* ---------- Botón ---------- */
-.boton{
-    width: 100%;
-    margin-top: 1rem;
-    padding: .8rem 1rem .9rem;
-    font: inherit;
-    font-size: 1.3125rem;
-    font-weight: 500;
-    color: var(--negro);
-    background: var(--hueso);
-    border: none;
-    border-radius: 0;
-    cursor: pointer;
-}
-
-.boton:hover{
-    color: var(--hueso);
-    background: var(--rojo);
-}
-
-.cambio{
-    margin: 1.5rem 0 0;
-    font-size: 1rem;
-    text-align: center;
-    color: var(--ceniza);
-}
-
-.cambio a{
-    color: var(--hueso);
-    text-underline-offset: .2em;
-}
-
-.cambio a:hover{
-    color: var(--rojo);
-}
-
-/* Foco visible al navegar con el teclado */
-.boton:focus-visible,
-.ver:focus-visible,
-.cambio a:focus-visible{
-    outline: 2px solid var(--hueso);
-    outline-offset: 4px;
-}
-
-/* ---------- Al entrar ---------- */
-/* El muro se apaga: la inscripción es negra, así que desaparece con él */
-body.dentro{
-    background-color: var(--negro);
-}
-
-.dentro .inscripcion footer{
-    opacity: 0;
-}
-
-/* ---------- Pantallas estrechas ---------- */
-@media (max-width: 62rem){
-    body{
-        grid-template-columns: 1fr;
-    }
-
-    .inscripcion{
-        padding: 3rem 0 0;
-    }
-
-    .inscripcion p{
-        font-size: clamp(2.75rem, 15vw, 5.5rem);
-    }
-
-    .inscripcion footer{
-        margin-top: 1.25rem;
-    }
-
-    .puerta{
-        width: 100%;
-        max-width: 26rem;
-        min-height: 0;
-        margin: 2.5rem auto 0;
-        padding: 5.5rem 2rem 2.5rem;
-    }
-
-    h1{
-        font-size: 2.375rem;
-    }
-}
-
-@media (prefers-reduced-motion: reduce){
-    body,
-    .inscripcion footer{
-        transition: none;
-    }
 }
